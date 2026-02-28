@@ -488,7 +488,7 @@
             return maxRound;
         }
 
-        function getPlayerScore(player, playerName, currentRound, coursePar) {
+        function getPlayerScore(player, playerName, currentRound, coursePar, playComplete) {
             // Initialize round scores array [R1, R2, R3, R4]
             const roundScores = [null, null, null, null];
 
@@ -574,8 +574,16 @@
             const strokes = parseInt(player.total) || 0;
 
             // Get current hole (thru)
-            const hole = player.hole || '';
-            const thru = hole && hole !== '0' ? hole : '';
+            // If play is complete, show "F" for finished; otherwise show hole number
+            let thru = '';
+            if (playComplete) {
+                thru = 'F';
+            } else {
+                const hole = player.hole || '';
+                if (hole && hole !== '0') {
+                    thru = hole;
+                }
+            }
 
             return {
                 name: playerName,
@@ -591,12 +599,13 @@
         function processTeamScores(apiPlayers, tournamentInfo) {
             const currentRound = getCurrentRound(tournamentInfo.status, apiPlayers);
             const coursePar = parseInt(tournamentInfo.par) || 72;
+            const playComplete = (tournamentInfo.status || '').toLowerCase().includes('play complete');
             const teams = [];
 
             for (const [teamName, roster] of Object.entries(TEAMS)) {
                 const golfers = roster.map(playerName => {
                     const apiPlayer = findPlayerInAPI(playerName, apiPlayers);
-                    return getPlayerScore(apiPlayer, playerName, currentRound, coursePar);
+                    return getPlayerScore(apiPlayer, playerName, currentRound, coursePar, playComplete);
                 });
 
                 // Sort golfers by relative score (lowest first)
