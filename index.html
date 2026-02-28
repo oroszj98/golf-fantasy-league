@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golf Fantasy League</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.4;
+            padding-bottom: 20px;
+        }
+
+        .header {
+            background: #1a472a;
+            color: white;
+            padding: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+        }
+
+        .timestamp {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+
+        .tournament-banner {
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            color: #333;
+            display: none;
+        }
+
+        .tournament-banner.visible {
+            display: block;
+        }
+
+        .tournament-banner .tournament-name {
+            font-weight: 600;
+        }
+
+        .tournament-banner .tournament-status {
+            color: #666;
+            margin-left: 8px;
+        }
+
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: white;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .expand-all-btn {
+            background: #1a472a;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .sort-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .sort-btn {
+            background: #e8e8e8;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .sort-btn.active {
+            background: #1a472a;
+            color: white;
+        }
+
+        .teams-container {
+            padding: 8px;
+        }
+
+        .team-card {
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .team-header:active {
+            background: #f8f8f8;
+        }
+
+        .team-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .team-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .team-rank {
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .team-scores {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .score-relative {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .score-under { color: #c41e3a; }
+        .score-over { color: #333; }
+        .score-even { color: #666; }
+
+        .score-strokes {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .expand-icon {
+            font-size: 1.2rem;
+            color: #999;
+            transition: transform 0.2s;
+        }
+
+        .team-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .golfers-table {
+            display: none;
+            border-top: 1px solid #eee;
+        }
+
+        .team-card.expanded .golfers-table {
+            display: block;
+        }
+
+        .golfer-header {
+            display: flex;
+            padding: 8px 16px;
+            background: #f8f8f8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .golfer-header span {
+            cursor: pointer;
+        }
+
+        .golfer-header span:hover {
+            color: #1a472a;
+        }
+
+        .golfer-row {
+            display: flex;
+            padding: 10px 16px;
+            border-top: 1px solid #f0f0f0;
+            align-items: center;
+        }
+
+        .golfer-row.counting {
+            background: #f0f7f0;
+        }
+
+        .golfer-row.not-counting {
+            opacity: 0.6;
+        }
+
+        .golfer-name {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .golfer-name .mc-badge {
+            background: #dc3545;
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-left: 6px;
+            font-weight: 600;
+        }
+
+        .golfer-name .dns-badge {
+            background: #6c757d;
+        }
+
+        .golfer-score {
+            width: 60px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .golfer-strokes {
+            width: 50px;
+            text-align: right;
+            color: #666;
+        }
+
+        .col-name { flex: 1; }
+        .col-round { width: 32px; text-align: center; padding-right: 12px; }
+        .col-thru { width: 36px; text-align: center; padding-right: 12px; }
+        .col-score { width: 50px; text-align: right; }
+        .col-strokes { width: 50px; text-align: right; }
+
+        .golfer-thru {
+            width: 36px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #555;
+        }
+
+        .golfer-round {
+            width: 32px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #555;
+        }
+
+        .golfer-round.penalty {
+            color: #dc3545;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 16px;
+            margin: 16px;
+            border-radius: 8px;
+        }
+
+        .sort-indicator {
+            margin-left: 4px;
+        }
+
+        /* Desktop styles */
+        @media (min-width: 768px) {
+            .header {
+                padding: 20px 24px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .teams-container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 16px;
+            }
+
+            .team-header {
+                padding: 16px 20px;
+            }
+
+            .golfer-row {
+                padding: 12px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Golf Fantasy League</h1>
+        <div class="timestamp" id="timestamp"></div>
+    </header>
+
+    <div class="tournament-banner" id="tournamentBanner"></div>
+
+    <div class="controls-bar">
+        <button class="expand-all-btn" id="expandAllBtn">Expand All</button>
+        <div class="sort-controls">
+            <span>Sort:</span>
+            <button class="sort-btn active" data-sort="score" id="sortScoreBtn">Score</button>
+            <button class="sort-btn" data-sort="name" id="sortNameBtn">Name</button>
+        </div>
+    </div>
+
+    <div class="teams-container" id="teamsContainer">
+        <div class="loading">Loading scores...</div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_KEY = '4c546941-9ceb-40a3-9944-ad261d507639';
+        const API_BASE = 'https://statpal.io/api/v1/golf';
+        const MISSED_CUT_STROKES = 80;
+        const COUNTING_GOLFERS = 4;
+
+        // Team rosters
+        const TEAMS = {
+            'Jim D': [
+                'Justin Thomas', 'Shane Lowry', 'Sepp Straka', 'Tyrrell Hatton',
+                'Aaron Rai', 'Taylor Pendrith', 'Byeong Hun An', 'J.J. Spaun'
+            ],
+            'Dave R': [
+                'Collin Morikawa', 'Russell Henley', 'Maverick McNealy', 'Wyndham Clark',
+                'Thomas Detry', 'Nick Taylor', 'Denny McCarthy', 'Lucas Glover'
+            ],
+            'Jeff O': [
+                'Patrick Cantlay', 'Brooks Koepka', 'Adam Scott', 'Billy Horschel',
+                'Harris English', 'Brian Harman', 'Akshay Bhatia', 'Min Woo Lee'
+            ],
+            'John V': [
+                'Jon Rahm', 'Hideki Matsuyama', 'Corey Conners', 'Keegan Bradley',
+                'Justin Rose', 'Chris Kirk', 'Alexander Noren', 'Si Woo Kim'
+            ],
+            'Jon A': [
+                'Viktor Hovland', 'Sam Burns', 'Cameron Smith', 'Xander Schauffele',
+                'Jason Day', 'Cameron Young', 'Will Zalatoris', 'Dustin Johnson'
+            ],
+            'Kevin B': [
+                'Rory McIlroy', 'Tommy Fleetwood', 'Robert MacIntyre', 'Daniel Berger',
+                'Tom Kim', 'Nick Dunlap', 'Stephan Jaeger', 'J.T. Poston'
+            ],
+            'Kevin F': [
+                'Bryson DeChambeau', 'Ludvig Åberg', 'Joaquín Niemann', 'Jordan Spieth',
+                'Tom Hoge', 'Sungjae Im', 'Rasmus Højgaard', 'Rickie Fowler'
+            ],
+            'Mike K': [
+                'Scottie Scheffler', 'Tony Finau', 'Sahith Theegala', 'Matt Fitzpatrick',
+                'Davis Thompson', 'Max Greyserman', 'Austin Eckroat', 'Max Homa'
+            ]
+        };
+
+        // State
+        let currentSort = { field: 'score', ascending: true };
+        let teamsData = [];
+        let allExpanded = false;
+
+        // DOM elements
+        const teamsContainer = document.getElementById('teamsContainer');
+        const timestampEl = document.getElementById('timestamp');
+        const expandAllBtn = document.getElementById('expandAllBtn');
+        const sortScoreBtn = document.getElementById('sortScoreBtn');
+        const sortNameBtn = document.getElementById('sortNameBtn');
+        const tournamentBanner = document.getElementById('tournamentBanner');
+
+        // Utility functions
+        function formatRelativeScore(score) {
+            if (score === 0) return 'E';
+            return score > 0 ? `+${score}` : `${score}`;
+        }
+
+        function getScoreClass(score) {
+            if (score < 0) return 'score-under';
+            if (score > 0) return 'score-over';
+            return 'score-even';
+        }
+
+        function normalizePlayerName(name) {
+            return name
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '') // Remove accents
+                .replace(/[^a-z\s]/g, '') // Remove special chars
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function fuzzyMatch(name1, name2) {
+            const n1 = normalizePlayerName(name1);
+            const n2 = normalizePlayerName(name2);
+
+            // Exact match
+            if (n1 === n2) return true;
+
+            // One contains the other
+            if (n1.includes(n2) || n2.includes(n1)) return true;
+
+            // Match last name + first initial
+            const parts1 = n1.split(' ');
+            const parts2 = n2.split(' ');
+
+            if (parts1.length >= 2 && parts2.length >= 2) {
+                const last1 = parts1[parts1.length - 1];
+                const last2 = parts2[parts2.length - 1];
+                const first1 = parts1[0][0];
+                const first2 = parts2[0][0];
+
+                if (last1 === last2 && first1 === first2) return true;
+            }
+
+            return false;
+        }
+
+        function findPlayerInAPI(playerName, apiPlayers) {
+            for (const player of apiPlayers) {
+                const apiName = player.name || '';
+                if (fuzzyMatch(playerName, apiName)) {
+                    return player;
+                }
+            }
+            return null;
+        }
+
+        function isMissedCut(player) {
+            if (!player) return false; // Not in tournament is handled separately
+
+            // Check today field for "CUT"
+            const today = (player.today || '').toUpperCase();
+            if (today === 'CUT' || today === 'MC' || today === 'WD' || today === 'DQ') {
+                return true;
+            }
+
+            // Check pos field
+            const pos = (player.pos || '').toLowerCase();
+            if (pos.includes('cut') || pos === 'mc' || pos === 'wd' || pos === 'dq') {
+                return true;
+            }
+
+            return false;
+        }
+
+        function getCurrentRound(tournamentStatus, players) {
+            // Try to parse from tournament status like "Round 3 - In Progress"
+            const match = tournamentStatus?.match(/Round\s+(\d+)/i);
+            if (match) {
+                return parseInt(match[1]);
+            }
+
+            // Fallback: find max rounds with scores among active players
+            let maxRound = 1;
+            for (const player of players) {
+                if (player.rounds?.round) {
+                    for (const round of player.rounds.round) {
+                        const result = round.result;
+                        if (result && result !== '--' && !isNaN(parseInt(result))) {
+                            maxRound = Math.max(maxRound, parseInt(round.number));
+                        }
+                    }
+                }
+            }
+            return maxRound;
+        }
+
+        function getPlayerScore(player, playerName, currentRound, coursePar) {
+            // Initialize round scores array [R1, R2, R3, R4]
+            const roundScores = [null, null, null, null];
+
+            // Player not in tournament at all
+            if (!player) {
+                let strokes = 0;
+                for (let i = 0; i < currentRound; i++) {
+                    roundScores[i] = MISSED_CUT_STROKES;
+                    strokes += MISSED_CUT_STROKES;
+                }
+                const parForRounds = currentRound * coursePar;
+                const relativeScore = strokes - parForRounds;
+                return {
+                    name: playerName,
+                    relativeScore,
+                    strokes,
+                    roundScores,
+                    thru: '',
+                    missedCut: true,
+                    notInTournament: true
+                };
+            }
+
+            // Player missed the cut
+            if (isMissedCut(player)) {
+                let strokes = 0;
+                let lastPlayedRound = 0;
+
+                // First pass: get actual round scores
+                if (player.rounds?.round) {
+                    for (const round of player.rounds.round) {
+                        const roundNum = parseInt(round.number);
+                        const result = round.result;
+                        if (roundNum >= 1 && roundNum <= 4) {
+                            if (result && result !== '--' && !isNaN(parseInt(result))) {
+                                roundScores[roundNum - 1] = parseInt(result);
+                                strokes += parseInt(result);
+                                lastPlayedRound = Math.max(lastPlayedRound, roundNum);
+                            }
+                        }
+                    }
+                }
+
+                // Second pass: add 80 for rounds after cut through current round
+                for (let i = lastPlayedRound; i < currentRound; i++) {
+                    roundScores[i] = MISSED_CUT_STROKES;
+                    strokes += MISSED_CUT_STROKES;
+                }
+
+                const parForRounds = currentRound * coursePar;
+                const relativeScore = strokes - parForRounds;
+
+                return {
+                    name: playerName,
+                    relativeScore,
+                    strokes,
+                    roundScores,
+                    thru: '',
+                    missedCut: true,
+                    notInTournament: false
+                };
+            }
+
+            // Active player - get round scores from API
+            if (player.rounds?.round) {
+                for (const round of player.rounds.round) {
+                    const roundNum = parseInt(round.number);
+                    const result = round.result;
+                    if (roundNum >= 1 && roundNum <= 4 && result && result !== '--' && !isNaN(parseInt(result))) {
+                        roundScores[roundNum - 1] = parseInt(result);
+                    }
+                }
+            }
+
+            let relativeScore = 0;
+            const parValue = player.scoretopar || player.par || '0';
+            if (parValue === 'E' || parValue === 'e') {
+                relativeScore = 0;
+            } else {
+                relativeScore = parseInt(parValue) || 0;
+            }
+
+            const strokes = parseInt(player.total) || 0;
+
+            // Get current hole (thru)
+            const hole = player.hole || '';
+            const thru = hole && hole !== '0' ? hole : '';
+
+            return {
+                name: playerName,
+                relativeScore,
+                strokes,
+                roundScores,
+                thru,
+                missedCut: false,
+                notInTournament: false
+            };
+        }
+
+        function processTeamScores(apiPlayers, tournamentInfo) {
+            const currentRound = getCurrentRound(tournamentInfo.status, apiPlayers);
+            const coursePar = parseInt(tournamentInfo.par) || 72;
+            const teams = [];
+
+            for (const [teamName, roster] of Object.entries(TEAMS)) {
+                const golfers = roster.map(playerName => {
+                    const apiPlayer = findPlayerInAPI(playerName, apiPlayers);
+                    return getPlayerScore(apiPlayer, playerName, currentRound, coursePar);
+                });
+
+                // Sort golfers by relative score (lowest first)
+                golfers.sort((a, b) => a.relativeScore - b.relativeScore);
+
+                // Mark counting golfers
+                golfers.forEach((g, i) => {
+                    g.counting = i < COUNTING_GOLFERS;
+                });
+
+                // Calculate team totals (top 4)
+                const countingGolfers = golfers.slice(0, COUNTING_GOLFERS);
+                const teamRelativeScore = countingGolfers.reduce((sum, g) => sum + g.relativeScore, 0);
+                const teamStrokes = countingGolfers.reduce((sum, g) => sum + g.strokes, 0);
+
+                teams.push({
+                    name: teamName,
+                    golfers,
+                    relativeScore: teamRelativeScore,
+                    strokes: teamStrokes
+                });
+            }
+
+            return teams;
+        }
+
+        function sortTeams(teams, field, ascending) {
+            return [...teams].sort((a, b) => {
+                if (field === 'name') {
+                    const cmp = a.name.localeCompare(b.name);
+                    return ascending ? cmp : -cmp;
+                }
+                // Default: sort by score
+                const diff = a.relativeScore - b.relativeScore;
+                return ascending ? diff : -diff;
+            });
+        }
+
+        function renderTeams(teams) {
+            if (teams.length === 0) {
+                teamsContainer.innerHTML = '<div class="loading">No data available</div>';
+                return;
+            }
+
+            const sortedTeams = sortTeams(teams, currentSort.field, currentSort.ascending);
+
+            teamsContainer.innerHTML = sortedTeams.map((team, index) => {
+                const scoreClass = getScoreClass(team.relativeScore);
+                const isExpanded = allExpanded;
+
+                return `
+                    <div class="team-card ${isExpanded ? 'expanded' : ''}" data-team="${team.name}">
+                        <div class="team-header">
+                            <div class="team-info">
+                                <div class="team-name">${team.name}</div>
+                                <div class="team-rank">#${index + 1}</div>
+                            </div>
+                            <div class="team-scores">
+                                <span class="score-relative ${scoreClass}">${formatRelativeScore(team.relativeScore)}</span>
+                                <span class="score-strokes">(${team.strokes})</span>
+                                <span class="expand-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="golfers-table">
+                            <div class="golfer-header">
+                                <span class="col-name" data-sort="name">Golfer</span>
+                                <span class="col-round">R1</span>
+                                <span class="col-round">R2</span>
+                                <span class="col-round">R3</span>
+                                <span class="col-round">R4</span>
+                                <span class="col-thru">Thru</span>
+                                <span class="col-score" data-sort="score">Tot</span>
+                                <span class="col-strokes" data-sort="strokes">Strks</span>
+                            </div>
+                            ${team.golfers.map(golfer => {
+                                const gScoreClass = getScoreClass(golfer.relativeScore);
+                                const rowClass = golfer.counting ? 'counting' : 'not-counting';
+                                let badge = '';
+                                if (golfer.notInTournament) {
+                                    badge = '<span class="mc-badge dns-badge">DNS</span>';
+                                } else if (golfer.missedCut) {
+                                    badge = '<span class="mc-badge">MC</span>';
+                                }
+
+                                const roundCells = golfer.roundScores.map((score, i) => {
+                                    const isPenalty = score === MISSED_CUT_STROKES;
+                                    const penaltyClass = isPenalty ? 'penalty' : '';
+                                    const display = score !== null ? score : '';
+                                    return '<div class="golfer-round ' + penaltyClass + '">' + display + '</div>';
+                                }).join('');
+
+                                return '<div class="golfer-row ' + rowClass + '">' +
+                                    '<div class="golfer-name">' + golfer.name + badge + '</div>' +
+                                    roundCells +
+                                    '<div class="golfer-thru">' + golfer.thru + '</div>' +
+                                    '<div class="golfer-score ' + gScoreClass + '">' + formatRelativeScore(golfer.relativeScore) + '</div>' +
+                                    '<div class="golfer-strokes">' + golfer.strokes + '</div>' +
+                                '</div>';
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Add click handlers for expand/collapse
+            document.querySelectorAll('.team-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    header.closest('.team-card').classList.toggle('expanded');
+                    updateExpandAllButton();
+                });
+            });
+        }
+
+        function updateExpandAllButton() {
+            const cards = document.querySelectorAll('.team-card');
+            const expandedCount = document.querySelectorAll('.team-card.expanded').length;
+            allExpanded = expandedCount === cards.length;
+            expandAllBtn.textContent = allExpanded ? 'Collapse All' : 'Expand All';
+        }
+
+        function updateTimestamp() {
+            const now = new Date();
+            const options = {
+                timeZone: 'America/New_York',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            };
+            const formatted = now.toLocaleString('en-US', options);
+            timestampEl.textContent = `Last updated: ${formatted} ET`;
+        }
+
+        // API functions
+        async function fetchLivescores() {
+            try {
+                teamsContainer.innerHTML = '<div class="loading">Loading scores...</div>';
+
+                const response = await fetch(`${API_BASE}/livescores?access_key=${API_KEY}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!response.ok) throw new Error('Failed to fetch livescores');
+                const data = await response.json();
+
+                // Handle API response structure: livescore.tournament
+                const tournament = data.livescore?.tournament || {};
+                const players = tournament.player || [];
+
+                if (!Array.isArray(players)) {
+                    console.error('Unexpected data structure:', data);
+                    teamsContainer.innerHTML = '<div class="error">Unable to parse tournament data</div>';
+                    return;
+                }
+
+                const tournamentInfo = {
+                    name: tournament.name || '',
+                    status: tournament.status || '',
+                    par: tournament.par || '72'
+                };
+
+                // Update tournament banner with actual tournament info
+                tournamentBanner.innerHTML = '<span class="tournament-name">' + tournamentInfo.name + '</span>' +
+                    '<span class="tournament-status">(' + tournamentInfo.status + ')</span>';
+                tournamentBanner.classList.add('visible');
+
+                teamsData = processTeamScores(players, tournamentInfo);
+                renderTeams(teamsData);
+                updateTimestamp();
+
+            } catch (error) {
+                console.error('Livescores fetch error:', error);
+                teamsContainer.innerHTML = `<div class="error">Error loading scores: ${error.message}</div>`;
+            }
+        }
+
+        // Event listeners
+        expandAllBtn.addEventListener('click', () => {
+            allExpanded = !allExpanded;
+            document.querySelectorAll('.team-card').forEach(card => {
+                if (allExpanded) {
+                    card.classList.add('expanded');
+                } else {
+                    card.classList.remove('expanded');
+                }
+            });
+            expandAllBtn.textContent = allExpanded ? 'Collapse All' : 'Expand All';
+        });
+
+        sortScoreBtn.addEventListener('click', () => {
+            if (currentSort.field === 'score') {
+                currentSort.ascending = !currentSort.ascending;
+            } else {
+                currentSort.field = 'score';
+                currentSort.ascending = true;
+            }
+            sortScoreBtn.classList.add('active');
+            sortNameBtn.classList.remove('active');
+            renderTeams(teamsData);
+        });
+
+        sortNameBtn.addEventListener('click', () => {
+            if (currentSort.field === 'name') {
+                currentSort.ascending = !currentSort.ascending;
+            } else {
+                currentSort.field = 'name';
+                currentSort.ascending = true;
+            }
+            sortNameBtn.classList.add('active');
+            sortScoreBtn.classList.remove('active');
+            renderTeams(teamsData);
+        });
+
+        // Initialize
+        fetchLivescores();
+    </script>
+</body>
+</html>
