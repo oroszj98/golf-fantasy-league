@@ -234,22 +234,29 @@
         }
 
         .golfer-score {
-            width: 60px;
+            width: 40px;
             text-align: right;
             font-weight: 600;
         }
 
+        .golfer-today {
+            width: 40px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
         .golfer-strokes {
-            width: 50px;
+            width: 44px;
             text-align: right;
             color: #666;
         }
 
         .col-name { flex: 1; }
+        .col-score { width: 40px; text-align: right; }
+        .col-today { width: 40px; text-align: center; padding-right: 6px; }
+        .col-thru { width: 32px; text-align: center; padding-right: 6px; }
         .col-round { width: 32px; text-align: center; padding-right: 12px; }
-        .col-thru { width: 36px; text-align: center; padding-right: 6px; }
-        .col-score { width: 50px; text-align: right; }
-        .col-strokes { width: 50px; text-align: right; }
+        .col-strokes { width: 44px; text-align: right; }
 
         .golfer-thru {
             width: 36px;
@@ -506,6 +513,7 @@
                     relativeScore,
                     strokes,
                     roundScores,
+                    today: '',
                     thru: '',
                     missedCut: true,
                     notInTournament: true
@@ -546,6 +554,7 @@
                     relativeScore,
                     strokes,
                     roundScores,
+                    today: '',
                     thru: '',
                     missedCut: true,
                     notInTournament: false
@@ -573,6 +582,9 @@
 
             const strokes = parseInt(player.total) || 0;
 
+            // Get today's score
+            const today = player.today || '';
+
             // Get current hole (thru)
             // If play is complete, show "F" for finished; otherwise show hole number
             let thru = '';
@@ -590,6 +602,7 @@
                 relativeScore,
                 strokes,
                 roundScores,
+                today,
                 thru,
                 missedCut: false,
                 notInTournament: false
@@ -671,14 +684,15 @@
                         </div>
                         <div class="golfers-table">
                             <div class="golfer-header">
-                                <span class="col-name" data-sort="name">Golfer</span>
+                                <span class="col-name">Golfer</span>
+                                <span class="col-score">Tot</span>
+                                <span class="col-today">Today</span>
+                                <span class="col-thru">Thru</span>
                                 <span class="col-round">R1</span>
                                 <span class="col-round">R2</span>
                                 <span class="col-round">R3</span>
                                 <span class="col-round">R4</span>
-                                <span class="col-thru">Thru</span>
-                                <span class="col-score" data-sort="score">Tot</span>
-                                <span class="col-strokes" data-sort="strokes">Strks</span>
+                                <span class="col-strokes">Strks</span>
                             </div>
                             ${team.golfers.map(golfer => {
                                 const gScoreClass = getScoreClass(golfer.relativeScore);
@@ -699,9 +713,10 @@
 
                                 return '<div class="golfer-row ' + rowClass + '">' +
                                     '<div class="golfer-name">' + golfer.name + badge + '</div>' +
-                                    roundCells +
-                                    '<div class="golfer-thru">' + golfer.thru + '</div>' +
                                     '<div class="golfer-score ' + gScoreClass + '">' + formatRelativeScore(golfer.relativeScore) + '</div>' +
+                                    '<div class="golfer-today">' + golfer.today + '</div>' +
+                                    '<div class="golfer-thru">' + golfer.thru + '</div>' +
+                                    roundCells +
                                     '<div class="golfer-strokes">' + golfer.strokes + '</div>' +
                                 '</div>';
                             }).join('')}
