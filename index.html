@@ -327,7 +327,7 @@
     <div class="controls-bar">
         <div class="controls-left">
             <button class="expand-all-btn" id="expandAllBtn">Expand All</button>
-            <button class="expand-all-btn" id="printBtn">Print</button>
+            <button class="expand-all-btn" id="printBtn">Export</button>
         </div>
         <div class="sort-controls">
             <span>Sort:</span>
@@ -586,7 +586,7 @@
             const today = player.today || '';
 
             // Get current hole (thru)
-            // If play is complete, show "F" for finished; otherwise show hole number
+            // If play is complete, show "F" for finished; otherwise show hole number or tee time
             let thru = '';
             if (playComplete) {
                 thru = 'F';
@@ -594,6 +594,10 @@
                 const hole = player.hole || '';
                 if (hole && hole !== '0') {
                     thru = hole;
+                } else {
+                    // Player hasn't teed off yet - show tee time if available (strip AM/PM)
+                    const rawTeeTime = player.tee_time || player.teetime || player.time || '';
+                    thru = rawTeeTime.replace(/\s*(AM|PM)\s*/i, '').trim();
                 }
             }
 
