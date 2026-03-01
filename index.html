@@ -70,6 +70,11 @@
             border-bottom: 1px solid #ddd;
         }
 
+        .controls-left {
+            display: flex;
+            gap: 8px;
+        }
+
         .expand-all-btn {
             background: #1a472a;
             color: white;
@@ -320,7 +325,10 @@
     <div class="tournament-banner" id="tournamentBanner"></div>
 
     <div class="controls-bar">
-        <button class="expand-all-btn" id="expandAllBtn">Expand All</button>
+        <div class="controls-left">
+            <button class="expand-all-btn" id="expandAllBtn">Expand All</button>
+            <button class="expand-all-btn" id="printBtn">Print</button>
+        </div>
         <div class="sort-controls">
             <span>Sort:</span>
             <button class="sort-btn active" data-sort="score" id="sortScoreBtn">Score</button>
@@ -387,6 +395,7 @@
         const sortScoreBtn = document.getElementById('sortScoreBtn');
         const sortNameBtn = document.getElementById('sortNameBtn');
         const tournamentBanner = document.getElementById('tournamentBanner');
+        const printBtn = document.getElementById('printBtn');
 
         // Utility functions
         function formatRelativeScore(score) {
@@ -818,6 +827,46 @@
             sortNameBtn.classList.add('active');
             sortScoreBtn.classList.remove('active');
             renderTeams(teamsData);
+        });
+
+        printBtn.addEventListener('click', () => {
+            if (teamsData.length === 0) return;
+
+            const sortedTeams = sortTeams(teamsData, currentSort.field, currentSort.ascending);
+            const rows = [];
+
+            // Header row
+            rows.push(['Golfer', 'Tot', 'Today', 'Thru', 'R1', 'R2', 'R3', 'R4', 'Strks'].join(','));
+
+            sortedTeams.forEach(team => {
+                // Team header row
+                rows.push([team.name, formatRelativeScore(team.relativeScore), '', '', '', '', '', '', team.strokes].join(','));
+
+                // Golfer rows
+                team.golfers.forEach(golfer => {
+                    const row = [
+                        golfer.name,
+                        formatRelativeScore(golfer.relativeScore),
+                        golfer.today,
+                        golfer.thru,
+                        golfer.roundScores[0] !== null ? golfer.roundScores[0] : '',
+                        golfer.roundScores[1] !== null ? golfer.roundScores[1] : '',
+                        golfer.roundScores[2] !== null ? golfer.roundScores[2] : '',
+                        golfer.roundScores[3] !== null ? golfer.roundScores[3] : '',
+                        golfer.strokes
+                    ];
+                    rows.push(row.join(','));
+                });
+            });
+
+            const csv = rows.join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'golf-fantasy-scores.csv';
+            a.click();
+            URL.revokeObjectURL(url);
         });
 
         // Initialize
