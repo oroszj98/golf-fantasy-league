@@ -219,18 +219,9 @@
             font-size: 0.9rem;
         }
 
-        .golfer-name .mc-badge {
-            background: #dc3545;
-            color: white;
-            font-size: 0.65rem;
-            padding: 2px 5px;
-            border-radius: 3px;
-            margin-left: 6px;
-            font-weight: 600;
-        }
-
-        .golfer-name .dns-badge {
-            background: #6c757d;
+        .golfer-name.missed-cut {
+            text-decoration: line-through;
+            color: #999;
         }
 
         .golfer-score {
@@ -697,12 +688,7 @@
                             ${team.golfers.map(golfer => {
                                 const gScoreClass = getScoreClass(golfer.relativeScore);
                                 const rowClass = golfer.counting ? 'counting' : 'not-counting';
-                                let badge = '';
-                                if (golfer.notInTournament) {
-                                    badge = '<span class="mc-badge dns-badge">DNS</span>';
-                                } else if (golfer.missedCut) {
-                                    badge = '<span class="mc-badge">MC</span>';
-                                }
+                                const nameClass = golfer.missedCut ? 'golfer-name missed-cut' : 'golfer-name';
 
                                 const roundCells = golfer.roundScores.map((score, i) => {
                                     const isPenalty = score === MISSED_CUT_STROKES;
@@ -712,7 +698,7 @@
                                 }).join('');
 
                                 return '<div class="golfer-row ' + rowClass + '">' +
-                                    '<div class="golfer-name">' + golfer.name + badge + '</div>' +
+                                    '<div class="' + nameClass + '">' + golfer.name + '</div>' +
                                     '<div class="golfer-score ' + gScoreClass + '">' + formatRelativeScore(golfer.relativeScore) + '</div>' +
                                     '<div class="golfer-today">' + golfer.today + '</div>' +
                                     '<div class="golfer-thru">' + golfer.thru + '</div>' +
