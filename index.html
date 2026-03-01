@@ -592,7 +592,7 @@
                 thru = 'F';
             } else {
                 const hole = player.hole || '';
-                if (hole && hole !== '0') {
+                if (hole && hole !== '0' && hole !== '-') {
                     thru = hole;
                 } else {
                     // Player hasn't teed off yet - show tee time if available (strip AM/PM)
