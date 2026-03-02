@@ -852,6 +852,10 @@
             const sortedTeams = sortTeams(teamsData, currentSort.field, currentSort.ascending);
             const rows = [];
 
+            // Tournament name row
+            const tournamentName = document.querySelector('.tournament-name')?.textContent || '';
+            if (tournamentName) rows.push(tournamentName);
+
             // Header row
             rows.push(['Golfer', 'Tot', 'Today', 'Thru', 'R1', 'R2', 'R3', 'R4', 'Strks'].join(','));
 
