@@ -455,7 +455,7 @@
             return null;
         }
 
-        function isMissedCut(player) {
+        function isMissedCut(player, tournamentFinal) {
             if (!player) return false; // Not in tournament is handled separately
 
             // Check today field for "CUT"
@@ -468,6 +468,17 @@
             const pos = (player.pos || '').toLowerCase();
             if (pos.includes('cut') || pos === 'mc' || pos === 'wd' || pos === 'dq') {
                 return true;
+            }
+
+            // When the full tournament is final, detect MC by R3 and R4 both being "--"
+            if (tournamentFinal && player.rounds?.round) {
+                const r3 = player.rounds.round.find(r => r.number === '3');
+                const r4 = player.rounds.round.find(r => r.number === '4');
+                const r3Missing = !r3 || !r3.result || r3.result === '--';
+                const r4Missing = !r4 || !r4.result || r4.result === '--';
+                if (r3Missing && r4Missing) {
+                    return true;
+                }
             }
 
             return false;
@@ -495,7 +506,7 @@
             return maxRound;
         }
 
-        function getPlayerScore(player, playerName, currentRound, coursePar, playComplete) {
+        function getPlayerScore(player, playerName, currentRound, coursePar, playComplete, tournamentFinal) {
             // Initialize round scores array [R1, R2, R3, R4]
             const roundScores = [null, null, null, null];
 
@@ -521,7 +532,7 @@
             }
 
             // Player missed the cut
-            if (isMissedCut(player)) {
+            if (isMissedCut(player, tournamentFinal)) {
                 let strokes = 0;
                 let lastPlayedRound = 0;
 
@@ -616,13 +627,15 @@
         function processTeamScores(apiPlayers, tournamentInfo) {
             const currentRound = getCurrentRound(tournamentInfo.status, apiPlayers);
             const coursePar = parseInt(tournamentInfo.par) || 72;
-            const playComplete = (tournamentInfo.status || '').toLowerCase().includes('play complete');
+            const status = (tournamentInfo.status || '').toLowerCase();
+            const playComplete = status.includes('play complete');
+            const tournamentFinal = status === 'final';
             const teams = [];
 
             for (const [teamName, roster] of Object.entries(TEAMS)) {
                 const golfers = roster.map(playerName => {
                     const apiPlayer = findPlayerInAPI(playerName, apiPlayers);
-                    return getPlayerScore(apiPlayer, playerName, currentRound, coursePar, playComplete);
+                    return getPlayerScore(apiPlayer, playerName, currentRound, coursePar, playComplete, tournamentFinal);
                 });
 
                 // Sort golfers by relative score (lowest first)
