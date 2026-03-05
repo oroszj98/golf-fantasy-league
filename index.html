@@ -904,9 +904,17 @@
                 } catch (e) { /* leave empty on parse failure */ }
             }
 
-            // Cumulative score-to-par; ESPN uses 'E' for even, we normalize to '0'
-            const scoreDisplay = competitor.score?.displayValue || 'E';
-            const scoretopar = scoreDisplay === 'E' ? '0' : scoreDisplay;
+            // Compute cumulative score-to-par by summing individual period linescores.
+            // ESPN's competitor.score.displayValue may not update until a round is complete,
+            // but each period's displayValue stays current throughout the round.
+            let scoreToPar = 0;
+            for (const ls of (competitor.linescores || [])) {
+                const dv = ls.displayValue || '';
+                if (dv !== '' && dv !== 'E' && dv !== 'e') {
+                    scoreToPar += parseInt(dv) || 0;
+                }
+            }
+            const scoretopar = String(scoreToPar);
 
             return {
                 name: competitor.athlete?.displayName || '',
