@@ -901,12 +901,10 @@
                 } catch (e) { /* leave empty on parse failure */ }
             }
 
-            // Thru (current hole); 0 or absent means player hasn't teed off yet.
-            // If a tee time is available the player is awaiting the next round, so
-            // clear thru (even if ESPN still reports 18 from the prior round) so that
-            // the tee time is shown instead.
+            // Thru > 0 means the round is in progress — show the hole completed.
+            // Thru of 0/null means the player hasn't teed off — tee time will show instead.
             const thru = competitor.status?.thru;
-            const hole = (thru != null && thru > 0 && !teeTime) ? String(thru) : '';
+            const hole = (thru != null && thru > 0) ? String(thru) : '';
 
             // Compute cumulative score-to-par by summing individual period linescores.
             // ESPN's competitor.score.displayValue may not update until a round is complete,
