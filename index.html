@@ -856,7 +856,8 @@
             switch (status.type?.name) {
                 case 'STATUS_FINAL':        return 'Final';
                 case 'STATUS_IN_PROGRESS':  return `Round ${period} - In Progress`;
-                case 'STATUS_END_OF_ROUND': return `Round ${period} - End of Round`;
+                case 'STATUS_END_OF_ROUND':
+                case 'STATUS_PLAY_COMPLETE':  return `Round ${period} - End of Round`;
                 case 'STATUS_SCHEDULED':    return 'Scheduled';
                 default:                    return status.type?.description || '';
             }
@@ -953,16 +954,10 @@
                 const competition = event?.competitions?.[0];
                 const competitors = competition?.competitors || [];
 
-                // DEBUG: log raw ESPN status so we can see what's coming through
-                console.log('ESPN competition status:', JSON.stringify(competition?.status));
-
                 if (competitors.length === 0) {
                     teamsContainer.innerHTML = '<div class="error">Unable to parse tournament data</div>';
                     return;
                 }
-
-                // DEBUG: log first competitor's raw status and linescores
-                if (competitors[0]) console.log('ESPN first competitor status:', JSON.stringify(competitors[0].status), 'linescores:', JSON.stringify(competitors[0].linescores));
 
                 // Derive par once from the first completed linescore; reuse for all players/rounds
                 const { par: courseParValue, confirmed: parConfirmed } = deriveCoursePar(competitors);
