@@ -103,19 +103,6 @@
             font-size: 0.85rem;
         }
 
-        .sort-btn {
-            background: #e8e8e8;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .sort-btn.active {
-            background: #1a472a;
-            color: white;
-        }
 
         .teams-container {
             padding: 8px;
@@ -340,11 +327,6 @@
             <button class="expand-all-btn" id="expandAllBtn">Expand All</button>
             <button class="expand-all-btn" id="printBtn">Export</button>
         </div>
-        <div class="sort-controls">
-            <span>Sort:</span>
-            <button class="sort-btn active" data-sort="score" id="sortScoreBtn">Score</button>
-            <button class="sort-btn" data-sort="name" id="sortNameBtn">Name</button>
-        </div>
     </div>
 
     <div class="teams-container" id="teamsContainer">
@@ -402,7 +384,6 @@
         };
 
         // State
-        let currentSort = { field: 'score', ascending: true };
         let teamsData = [];
         let allExpanded = false;
 
@@ -410,8 +391,6 @@
         const teamsContainer = document.getElementById('teamsContainer');
         const timestampEl = document.getElementById('timestamp');
         const expandAllBtn = document.getElementById('expandAllBtn');
-        const sortScoreBtn = document.getElementById('sortScoreBtn');
-        const sortNameBtn = document.getElementById('sortNameBtn');
         const tournamentBanner = document.getElementById('tournamentBanner');
         const printBtn = document.getElementById('printBtn');
 
@@ -680,25 +659,13 @@
             return teams;
         }
 
-        function sortTeams(teams, field, ascending) {
-            return [...teams].sort((a, b) => {
-                if (field === 'name') {
-                    const cmp = a.name.localeCompare(b.name);
-                    return ascending ? cmp : -cmp;
-                }
-                // Default: sort by score
-                const diff = a.relativeScore - b.relativeScore;
-                return ascending ? diff : -diff;
-            });
-        }
-
         function renderTeams(teams) {
             if (teams.length === 0) {
                 teamsContainer.innerHTML = '<div class="loading">No data available</div>';
                 return;
             }
 
-            const sortedTeams = sortTeams(teams, currentSort.field, currentSort.ascending);
+            const sortedTeams = [...teams].sort((a, b) => a.relativeScore - b.relativeScore);
 
             teamsContainer.innerHTML = sortedTeams.map((team, index) => {
                 const scoreClass = getScoreClass(team.relativeScore);
@@ -1000,34 +967,10 @@
             expandAllBtn.textContent = allExpanded ? 'Collapse All' : 'Expand All';
         });
 
-        sortScoreBtn.addEventListener('click', () => {
-            if (currentSort.field === 'score') {
-                currentSort.ascending = !currentSort.ascending;
-            } else {
-                currentSort.field = 'score';
-                currentSort.ascending = true;
-            }
-            sortScoreBtn.classList.add('active');
-            sortNameBtn.classList.remove('active');
-            renderTeams(teamsData);
-        });
-
-        sortNameBtn.addEventListener('click', () => {
-            if (currentSort.field === 'name') {
-                currentSort.ascending = !currentSort.ascending;
-            } else {
-                currentSort.field = 'name';
-                currentSort.ascending = true;
-            }
-            sortNameBtn.classList.add('active');
-            sortScoreBtn.classList.remove('active');
-            renderTeams(teamsData);
-        });
-
         printBtn.addEventListener('click', () => {
             if (teamsData.length === 0) return;
 
-            const sortedTeams = sortTeams(teamsData, currentSort.field, currentSort.ascending);
+            const sortedTeams = [...teamsData].sort((a, b) => a.relativeScore - b.relativeScore);
             const rows = [];
 
             // Tournament name row
