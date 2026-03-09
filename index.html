@@ -485,7 +485,7 @@
             // Try to parse from tournament status like "Round 3 - In Progress"
             const match = tournamentStatus?.match(/Round\s+(\d+)/i);
             if (match) {
-                return parseInt(match[1]);
+                return Math.min(parseInt(match[1]), 4);
             }
 
             // Fallback: find max rounds with scores among active players
@@ -500,7 +500,7 @@
                     }
                 }
             }
-            return maxRound;
+            return Math.min(maxRound, 4);
         }
 
         function getPlayerScore(player, playerName, currentRound, coursePar, playComplete, tournamentFinal) {
