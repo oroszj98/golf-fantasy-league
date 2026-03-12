@@ -834,9 +834,11 @@
         function normalizeESPNPlayer(competitor, currentPeriod) {
             const statusTypeName = competitor.status?.type?.name || '';
 
-            // Round scores — only include rounds where strokes > 0 (i.e., actually played)
+            // Round scores — only include fully completed 18-hole rounds.
+            // outScore > 0 confirms the back 9 was finished; this excludes partial
+            // rounds from players who withdrew or were DQ'd mid-round.
             const rounds = (competitor.linescores || [])
-                .filter(ls => ls.value > 0)
+                .filter(ls => ls.value > 0 && ls.outScore > 0)
                 .map(ls => ({
                     number: String(ls.period),
                     result: String(Math.round(ls.value))
