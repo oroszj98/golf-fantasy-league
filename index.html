@@ -803,7 +803,7 @@
         function deriveCoursePar(competitors) {
             for (const c of competitors) {
                 for (const ls of (c.linescores || [])) {
-                    if (ls.value > 0 && ls.displayValue) {
+                    if (ls.value > 0 && ls.outScore > 0 && ls.displayValue) {
                         const rel = ls.displayValue === 'E' ? 0 : parseInt(ls.displayValue);
                         if (!isNaN(rel)) {
                             const par = Math.round(ls.value - rel);
