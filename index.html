@@ -800,10 +800,12 @@
         // Derive course par once from the first competitor that has a completed linescore.
         // Par is constant across all four rounds, so we lock it in here and reuse everywhere.
         // Returns {par, confirmed} — confirmed is false when falling back to 72 before any round completes.
-        function deriveCoursePar(competitors) {
+        function deriveCoursePar(competitors, currentPeriod) {
+            // Pass 1: linescores from a past period are structurally complete —
+            // ESPN does not revise them once the tournament advances.
             for (const c of competitors) {
                 for (const ls of (c.linescores || [])) {
-                    if (ls.value > 0 && ls.inScore > 0 && ls.outScore > 0 && ls.displayValue) {
+                    if (ls.period < currentPeriod && ls.value > 0 && ls.displayValue) {
                         const rel = ls.displayValue === 'E' ? 0 : parseInt(ls.displayValue);
                         if (!isNaN(rel)) {
                             const par = Math.round(ls.value - rel);
@@ -812,6 +814,22 @@
                     }
                 }
             }
+
+            // Pass 2 (round 1 / fallback): require both 9-hole scores >= 28.
+            // No professional can complete 9 holes in fewer than 28 strokes, so
+            // a lower value indicates an in-progress partial, not a finished nine.
+            for (const c of competitors) {
+                for (const ls of (c.linescores || [])) {
+                    if (ls.value > 0 && ls.inScore >= 28 && ls.outScore >= 28 && ls.displayValue) {
+                        const rel = ls.displayValue === 'E' ? 0 : parseInt(ls.displayValue);
+                        if (!isNaN(rel)) {
+                            const par = Math.round(ls.value - rel);
+                            if (par >= 68 && par <= 75) return { par, confirmed: true };
+                        }
+                    }
+                }
+            }
+
             return { par: 72, confirmed: false }; // fallback before any round completes
         }
 
@@ -926,8 +944,8 @@
                 }
 
                 // Derive par once from the first completed linescore; reuse for all players/rounds
-                const { par: courseParValue, confirmed: parConfirmed } = deriveCoursePar(competitors);
                 const currentPeriod = competition?.status?.period || 1;
+                const { par: courseParValue, confirmed: parConfirmed } = deriveCoursePar(competitors, currentPeriod);
 
                 const tournamentInfo = {
                     name: event?.name || '',
