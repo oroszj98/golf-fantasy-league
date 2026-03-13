@@ -803,7 +803,7 @@
         function deriveCoursePar(competitors) {
             for (const c of competitors) {
                 for (const ls of (c.linescores || [])) {
-                    if (ls.value > 0 && ls.outScore > 0 && ls.displayValue) {
+                    if (ls.value > 0 && ls.inScore > 0 && ls.outScore > 0 && ls.displayValue) {
                         const rel = ls.displayValue === 'E' ? 0 : parseInt(ls.displayValue);
                         if (!isNaN(rel)) {
                             const par = Math.round(ls.value - rel);
@@ -835,10 +835,9 @@
             const statusTypeName = competitor.status?.type?.name || '';
 
             // Round scores — only include fully completed 18-hole rounds.
-            // outScore > 0 confirms the back 9 was finished; this excludes partial
-            // rounds from players who withdrew or were DQ'd mid-round.
+            // Both inScore (back 9) and outScore (front 9) must be > 0.
             const rounds = (competitor.linescores || [])
-                .filter(ls => ls.value > 0 && ls.outScore > 0)
+                .filter(ls => ls.value > 0 && ls.inScore > 0 && ls.outScore > 0)
                 .map(ls => ({
                     number: String(ls.period),
                     result: String(Math.round(ls.value))
