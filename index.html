@@ -333,7 +333,6 @@
         <div class="loading">Loading scores...</div>
     </div>
 
-    <div class="par-footnote" id="parFootnote" style="display:none;">* Par is estimated and may be updated once a golfer completes the first round.</div>
 
     <script>
         // Configuration
@@ -345,6 +344,7 @@
         // ESPN API (new — toggle to switch data source)
         const ESPN_SCOREBOARD = 'https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard';
         const ESPN_LEADERBOARD_BASE = 'https://site.api.espn.com/apis/site/v2/sports/golf/leaderboard';
+        const ESPN_EVENT_BASE = 'https://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events';
         const USE_ESPN_API = false;
 
         // Team rosters
@@ -797,42 +797,6 @@
 
         // ESPN API helpers
 
-        // Derive course par once from the first competitor that has a completed linescore.
-        // Par is constant across all four rounds, so we lock it in here and reuse everywhere.
-        // Returns {par, confirmed} — confirmed is false when falling back to 72 before any round completes.
-        function deriveCoursePar(competitors, currentPeriod) {
-            // Pass 1: linescores from a past period are structurally complete —
-            // ESPN does not revise them once the tournament advances.
-            for (const c of competitors) {
-                for (const ls of (c.linescores || [])) {
-                    if (ls.period < currentPeriod && ls.value > 0 && ls.displayValue) {
-                        const rel = ls.displayValue === 'E' ? 0 : parseInt(ls.displayValue);
-                        if (!isNaN(rel)) {
-                            const par = Math.round(ls.value - rel);
-                            if (par >= 68 && par <= 75) return { par, confirmed: true };
-                        }
-                    }
-                }
-            }
-
-            // Pass 2 (round 1 / fallback): require both 9-hole scores >= 28.
-            // No professional can complete 9 holes in fewer than 28 strokes, so
-            // a lower value indicates an in-progress partial, not a finished nine.
-            for (const c of competitors) {
-                for (const ls of (c.linescores || [])) {
-                    if (ls.value > 0 && ls.inScore >= 28 && ls.outScore >= 28 && ls.displayValue) {
-                        const rel = ls.displayValue === 'E' ? 0 : parseInt(ls.displayValue);
-                        if (!isNaN(rel)) {
-                            const par = Math.round(ls.value - rel);
-                            if (par >= 68 && par <= 75) return { par, confirmed: true };
-                        }
-                    }
-                }
-            }
-
-            return { par: 72, confirmed: false }; // fallback before any round completes
-        }
-
         // Map ESPN competition status to the strings processTeamScores() already understands.
         function espnStatusString(competition) {
             const status = competition?.status;
@@ -927,12 +891,14 @@
                 const eventId = sbData.events?.[0]?.id;
                 if (!eventId) throw new Error('No active event found on ESPN scoreboard');
 
-                // Step 2: get full leaderboard for that event (richer data than scoreboard)
-                const lbResp = await fetch(`${ESPN_LEADERBOARD_BASE}?event=${eventId}`, {
-                    headers: { 'Accept': 'application/json' }
-                });
+                // Step 2: fetch leaderboard and event details in parallel
+                const [lbResp, evResp] = await Promise.all([
+                    fetch(`${ESPN_LEADERBOARD_BASE}?event=${eventId}`, { headers: { 'Accept': 'application/json' } }),
+                    fetch(`${ESPN_EVENT_BASE}/${eventId}`, { headers: { 'Accept': 'application/json' } })
+                ]);
                 if (!lbResp.ok) throw new Error('Failed to fetch ESPN leaderboard');
                 const lbData = await lbResp.json();
+                const evData = evResp.ok ? await evResp.json() : null;
 
                 const event = lbData.events?.[0];
                 const competition = event?.competitions?.[0];
@@ -943,9 +909,8 @@
                     return;
                 }
 
-                // Derive par once from the first completed linescore; reuse for all players/rounds
                 const currentPeriod = competition?.status?.period || 1;
-                const { par: courseParValue, confirmed: parConfirmed } = deriveCoursePar(competitors, currentPeriod);
+                const courseParValue = evData?.shotsToPar != null ? Math.abs(evData.shotsToPar) : 72;
 
                 const tournamentInfo = {
                     name: event?.name || '',
@@ -955,12 +920,9 @@
 
                 const players = competitors.map(c => normalizeESPNPlayer(c, currentPeriod));
 
-                const parDisplay = parConfirmed ? 'Par ' + tournamentInfo.par : 'Par ' + tournamentInfo.par + '*';
                 tournamentBanner.innerHTML = '<span class="tournament-name">' + tournamentInfo.name + '</span>' +
                     '<span class="tournament-status">(' + tournamentInfo.status + ')</span>' +
-                    '<span class="tournament-par">' + parDisplay + '</span>';
-
-                document.getElementById('parFootnote').style.display = parConfirmed ? 'none' : '';
+                    '<span class="tournament-par">Par ' + tournamentInfo.par + '</span>';
                 tournamentBanner.classList.add('visible');
 
                 teamsData = processTeamScores(players, tournamentInfo);
