@@ -892,11 +892,13 @@
                 console.log('[par-debug] eventId from scoreboard:', eventId);
                 if (!eventId) throw new Error('No active event found on ESPN scoreboard');
 
-                // Step 2: fetch leaderboard and event details in parallel
-                const [lbResp, evResp] = await Promise.all([
-                    fetch(`${ESPN_LEADERBOARD_BASE}?event=${eventId}`, { headers: { 'Accept': 'application/json' } }),
-                    fetch(`${ESPN_EVENT_BASE}/${eventId}`, { headers: { 'Accept': 'application/json' } })
-                ]);
+                // Step 2: fetch leaderboard
+                const lbResp = await fetch(`${ESPN_LEADERBOARD_BASE}?event=${eventId}`, { headers: { 'Accept': 'application/json' } });
+                // evResp commented out - evData was only used for courseParValue, now sourced from lbData
+                // const [lbResp, evResp] = await Promise.all([
+                //     fetch(`${ESPN_LEADERBOARD_BASE}?event=${eventId}`, { headers: { 'Accept': 'application/json' } }),
+                //     fetch(`${ESPN_EVENT_BASE}/${eventId}`, { headers: { 'Accept': 'application/json' } })
+                // ]);
                 if (!lbResp.ok) throw new Error('Failed to fetch ESPN leaderboard');
                 const lbData = await lbResp.json();
                 console.log('[par-debug] lbData top-level keys:', Object.keys(lbData || {}));
