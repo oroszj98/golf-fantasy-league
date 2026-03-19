@@ -902,6 +902,8 @@
                 console.log('[par-debug] lbData top-level keys:', Object.keys(lbData || {}));
                 console.log('[par-debug] lbData.events[0] keys:', Object.keys(lbData?.events?.[0] || {}));
                 console.log('[par-debug] lbData.events[0].courses[0] keys:', Object.keys(lbData?.events?.[0]?.courses?.[0] || {}));
+                console.log('[par-debug] lbData.events[0].courses[0].shotsToPar:', lbData?.events?.[0]?.courses?.[0]?.shotsToPar);
+                console.log('[par-debug] lbData.events[0].courses (all):', JSON.stringify(lbData?.events?.[0]?.courses?.map(c => ({ id: c.id, name: c.name, shotsToPar: c.shotsToPar }))));
                 console.log('[par-debug] evResp status:', evResp.status, 'ok:', evResp.ok);
                 const evData = evResp.ok ? await evResp.json() : null;
                 console.log('[par-debug] evData top-level keys:', Object.keys(evData || {}));
