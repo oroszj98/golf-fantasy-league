@@ -904,13 +904,14 @@
                 console.log('[par-debug] lbData.events[0].courses[0] keys:', Object.keys(lbData?.events?.[0]?.courses?.[0] || {}));
                 console.log('[par-debug] lbData.events[0].courses[0].shotsToPar:', lbData?.events?.[0]?.courses?.[0]?.shotsToPar);
                 console.log('[par-debug] lbData.events[0].courses (all):', JSON.stringify(lbData?.events?.[0]?.courses?.map(c => ({ id: c.id, name: c.name, shotsToPar: c.shotsToPar }))));
-                console.log('[par-debug] evResp status:', evResp.status, 'ok:', evResp.ok);
-                const evData = evResp.ok ? await evResp.json() : null;
-                console.log('[par-debug] evData top-level keys:', Object.keys(evData || {}));
-                console.log('[par-debug] evData.tournament:', evData?.tournament);
-                console.log('[par-debug] evData.shotsToPar:', evData?.shotsToPar);
-                console.log('[par-debug] evData.competitions[0].shotsToPar:', evData?.competitions?.[0]?.shotsToPar);
-                console.log('[par-debug] evData.competitions[0] keys:', Object.keys(evData?.competitions?.[0] || {}));
+                // evData kept for reference - currently unused; was used for courseParValue
+                // console.log('[par-debug] evResp status:', evResp.status, 'ok:', evResp.ok);
+                // const evData = evResp.ok ? await evResp.json() : null;
+                // console.log('[par-debug] evData top-level keys:', Object.keys(evData || {}));
+                // console.log('[par-debug] evData.tournament:', evData?.tournament);
+                // console.log('[par-debug] evData.shotsToPar:', evData?.shotsToPar);
+                // console.log('[par-debug] evData.competitions[0].shotsToPar:', evData?.competitions?.[0]?.shotsToPar);
+                // console.log('[par-debug] evData.competitions[0] keys:', Object.keys(evData?.competitions?.[0] || {}));
 
                 const event = lbData.events?.[0];
                 const competition = event?.competitions?.[0];
@@ -922,7 +923,7 @@
                 }
 
                 const currentPeriod = competition?.status?.period || 1;
-                const courseParValue = evData?.shotsToPar || 72;
+                const courseParValue = lbData?.events?.[0]?.courses?.[0]?.shotsToPar || 72;
                 console.log('[par-debug] courseParValue:', courseParValue);
 
                 const tournamentInfo = {
