@@ -854,7 +854,7 @@
             // Thru > 0 means the round is in progress — show the hole completed.
             // Thru of 0/null means the player hasn't teed off — tee time will show instead.
             const thru = competitor.status?.thru;
-            const hole = (thru != null && thru > 0) ? String(thru) : '';
+            const hole = (thru != null && thru > 0) ? (thru === 18 ? 'F' : String(thru)) : '';
 
             // Compute cumulative score-to-par by summing individual period linescores.
             // ESPN's competitor.score.displayValue may not update until a round is complete,
