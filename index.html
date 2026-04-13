@@ -679,6 +679,12 @@
 
             const sortedTeams = [...teams].sort((a, b) => a.relativeScore - b.relativeScore);
 
+            // Assign tied ranks: teams with equal scores share the same placement
+            const teamRanks = sortedTeams.map((team, index, arr) => {
+                const rank = arr.findIndex(t => t.relativeScore === team.relativeScore) + 1;
+                return rank;
+            });
+
             teamsContainer.innerHTML = sortedTeams.map((team, index) => {
                 const scoreClass = getScoreClass(team.relativeScore);
                 const isExpanded = allExpanded;
@@ -688,7 +694,7 @@
                         <div class="team-header">
                             <div class="team-info">
                                 <div class="team-name">${team.name}</div>
-                                <div class="team-rank">#${index + 1}</div>
+                                <div class="team-rank">#${teamRanks[index]}</div>
                             </div>
                             <div class="team-scores">
                                 <span class="score-relative ${scoreClass}">${formatRelativeScore(team.relativeScore)}</span>
