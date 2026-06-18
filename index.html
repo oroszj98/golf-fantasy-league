@@ -833,6 +833,16 @@
         // Normalize one ESPN competitor into the shape getPlayerScore() / isMissedCut() expect.
         function normalizeESPNPlayer(competitor, currentPeriod) {
             const statusTypeName = competitor.status?.type?.name || '';
+            const playerName = competitor.athlete?.displayName || '';
+            if (playerName.toLowerCase().includes('day')) {
+                console.log('[wd-debug] Jason Day competitor:', JSON.stringify({
+                    name: playerName,
+                    statusTypeName,
+                    statusType: competitor.status?.type,
+                    status: competitor.status,
+                    linescores: competitor.linescores
+                }));
+            }
 
             // Round scores — only include fully completed 18-hole rounds.
             // Both inScore (back 9) and outScore (front 9) must be > 0.
