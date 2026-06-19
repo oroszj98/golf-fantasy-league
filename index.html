@@ -833,29 +833,25 @@
         // Normalize one ESPN competitor into the shape getPlayerScore() / isMissedCut() expect.
         function normalizeESPNPlayer(competitor, currentPeriod) {
             const statusTypeName = competitor.status?.type?.name || '';
-            const playerName = competitor.athlete?.displayName || '';
-            if (playerName.toLowerCase().includes('day')) {
-                console.log('[wd-debug] Jason Day competitor:', JSON.stringify({
-                    name: playerName,
-                    statusTypeName,
-                    statusType: competitor.status?.type,
-                    status: competitor.status,
-                    linescores: competitor.linescores
-                }));
-            }
+            const shortDetail = competitor.status?.type?.shortDetail || '';
 
             // Round scores — only include fully completed 18-hole rounds.
-            // Both inScore (back 9) and outScore (front 9) must be > 0.
+            // Both inScore and outScore must be >= 28 (no pro completes 9 holes in fewer).
             const rounds = (competitor.linescores || [])
-                .filter(ls => ls.value > 0 && ls.inScore > 0 && ls.outScore > 0)
+                .filter(ls => ls.value > 0 && ls.inScore >= 28 && ls.outScore >= 28)
                 .map(ls => ({
                     number: String(ls.period),
                     result: String(Math.round(ls.value))
                 }));
 
             // today: cut/WD/DQ flags, or current round's relative score for active players
+            // ESPN uses STATUS_CUT for both cuts and withdrawals; shortDetail distinguishes them.
             let today = '';
-            if (statusTypeName === 'STATUS_CUT') {
+            if (shortDetail === 'WD') {
+                today = 'WD';
+            } else if (shortDetail === 'DQ') {
+                today = 'DQ';
+            } else if (statusTypeName === 'STATUS_CUT') {
                 today = 'CUT';
             } else if (statusTypeName === 'STATUS_WITHDRAWN') {
                 today = 'WD';
